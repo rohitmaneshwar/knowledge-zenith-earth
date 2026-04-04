@@ -1,0 +1,15 @@
+# Node & React
+node_modules/
+dist/
+build/
+
+# Python & Flask
+__pycache__/
+venv/
+env/
+*.pyc
+
+# Database & Secrets
+*.db
+database.db
+.env
