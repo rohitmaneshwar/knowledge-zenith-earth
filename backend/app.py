@@ -111,6 +111,10 @@ def get_reviews():
                "rating": r.rating, "message": r.message, "date": r.date} for r in reviews]
     return jsonify(output)
 
+@app.route('/')
+def home():
+    return "Knowledge Zenith API is Live and Running!"
+
 # ==========================================
 # SECTION 6: APP RUNNER
 # ==========================================
