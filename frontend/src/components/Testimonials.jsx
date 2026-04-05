@@ -3,26 +3,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaStar, FaQuoteLeft, FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 // ==========================================
-// CONFIGURATION (Live karne ke liye zaroori)
+// CONFIGURATION
 // ==========================================
-// Live karte waqt yahan backend ka URL dalna hoga (Jaise: 'https://omkar-backend.onrender.com')
 const API_BASE_URL = 'https://knowledge-zenith-earth.onrender.com';
 
-// ==========================================
-// TESTIMONIALS COMPONENT
-// ==========================================
 const Testimonials = () => {
-  // 1. Component States
   const [reviews, setReviews] = useState([]);
-  const [showForm, setShowForm] = useState(false); // Popup form dikhane ke liye
+  const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
-  
-  // 2. Scroll Logic Setup (Carousel ke liye)
+  const [isSubmitting, setIsSubmitting] = useState(false); // New: Submitting state
+
   const scrollRef = useRef(null);
   const [showLeftBtn, setShowLeftBtn] = useState(false);
   const [showRightBtn, setShowRightBtn] = useState(true);
 
-  // Naye review ka data
   const [newReview, setNewReview] = useState({
     name: '',
     program: '3 Hours Manifestation Webinar',
@@ -30,40 +24,33 @@ const Testimonials = () => {
     message: ''
   });
 
-  // ==========================================
-  // API CALLS & LOGIC
-  // ==========================================
-
   // Database se Reviews Load karna
   const fetchReviews = async () => {
     try {
+      setLoading(true);
       const response = await fetch(`${API_BASE_URL}/api/reviews`);
+      if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
       setReviews(data);
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching reviews:", error);
+    } finally {
       setLoading(false);
     }
   };
 
-  // Jab page pehli baar khule, toh reviews load karo
   useEffect(() => {
     fetchReviews();
   }, []);
 
-  // Scroll Buttons ki Visibility check karna
   const handleScroll = () => {
     if (scrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      // Agar thoda right gaya hai, toh Left button dikhao
       setShowLeftBtn(scrollLeft > 10);
-      // Agar poora end tak nahi pahucha hai, toh Right button dikhao
       setShowRightBtn(scrollLeft + clientWidth < scrollWidth - 10);
     }
   };
 
-  // Button dabane par scroll aage-peeche karna
   const scroll = (direction) => {
     if (scrollRef.current) {
       const scrollAmount = 350; 
@@ -74,9 +61,11 @@ const Testimonials = () => {
     }
   };
 
-  // Naya Review Backend me Submit karna
+  // Naya Review Submit karna
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true); // Button ko disable karne ke liye
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/reviews`, {
         method: 'POST',
@@ -85,13 +74,18 @@ const Testimonials = () => {
       });
 
       if (response.ok) {
-        fetchReviews(); // Database se naye data ko refresh karo
-        setShowForm(false); // Form band karo
-        setNewReview({ name: '', program: '3 Hours Manifestation Webinar', rating: 5, message: '' }); // Form khali karo
-        alert("Magic Posted! ✨ Aapka feedback save ho gaya hai.");
+        await fetchReviews(); 
+        setShowForm(false);
+        setNewReview({ name: '', program: '3 Hours Manifestation Webinar', rating: 5, message: '' });
+        alert("✨ Magic Posted! Aapka feedback save ho gaya hai.");
+      } else {
+        alert("❌ Error: Server ne request accept nahi ki.");
       }
     } catch (error) {
-      alert("Server error! Kya Flask chal raha hai?");
+      console.error("Submit error:", error);
+      alert("⚠️ Server Error! Ya toh Render server 'Sleep' mode mein hai ya URL galat hai. Kripya 1 minute baad fir koshish karein.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -99,14 +93,10 @@ const Testimonials = () => {
     setNewReview({ ...newReview, [e.target.name]: e.target.value });
   };
 
-  // ==========================================
-  // UI RENDER
-  // ==========================================
   return (
     <section className="py-20 px-6 bg-white overflow-hidden" id="feedback">
       <div className="max-w-7xl mx-auto relative">
         
-        {/* SECTION HEADER */}
         <div className="text-center mb-16">
           <h2 className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-2">Testimonials</h2>
           <h3 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-6">Real Stories, Real Magic ✨</h3>
@@ -118,31 +108,26 @@ const Testimonials = () => {
           </button>
         </div>
 
-        {/* CAROUSEL SLIDER WRAPPER */}
         <div className="relative group">
-          
-          {/* Left Arrow Button */}
           {showLeftBtn && (
             <button onClick={() => scroll('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 bg-white text-blue-900 p-4 rounded-full shadow-xl border border-gray-100 hover:bg-blue-600 hover:text-white transition-all">
               <FaChevronLeft />
             </button>
           )}
 
-          {/* Right Arrow Button */}
           {showRightBtn && reviews.length > 0 && (
             <button onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 bg-white text-blue-900 p-4 rounded-full shadow-xl border border-gray-100 hover:bg-blue-600 hover:text-white transition-all">
               <FaChevronRight />
             </button>
           )}
 
-          {/* Scrolling Container */}
           <div 
             ref={scrollRef}
             onScroll={handleScroll}
             className="flex gap-6 overflow-x-auto pb-10 pt-4 snap-x snap-mandatory scroll-smooth [&::-webkit-scrollbar]:hidden"
           >
             {loading ? (
-              <p className="w-full text-center text-gray-400">Loading Magic Stories...</p>
+              <p className="w-full text-center text-gray-400">⌛ Loading Magic Stories...</p>
             ) : reviews.length === 0 ? (
               <p className="w-full text-center text-gray-400 italic">No reviews yet. Be the first to share!</p>
             ) : (
@@ -156,9 +141,8 @@ const Testimonials = () => {
                   >
                     <FaQuoteLeft className="text-blue-200 text-3xl absolute top-6 right-6 opacity-40" />
                     
-                    {/* Star Ratings */}
                     <div className="flex text-yellow-400 mb-3 text-sm">
-                      {[...Array(rev.rating)].map((_, i) => <FaStar key={i} />)}
+                      {[...Array(parseInt(rev.rating))].map((_, i) => <FaStar key={i} />)}
                     </div>
                     
                     <p className="text-gray-700 italic mb-6 leading-relaxed flex-grow text-sm md:text-base">
@@ -176,9 +160,7 @@ const Testimonials = () => {
           </div>
         </div>
 
-        {/* ==========================================
-            POPUP FORM (MODAL)
-        ========================================== */}
+        {/* POPUP FORM */}
         {showForm && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
             <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-8 w-full max-w-md relative">
@@ -207,11 +189,14 @@ const Testimonials = () => {
                 
                 <textarea name="message" required value={newReview.message} onChange={handleChange} rows="4" className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="How was your experience?"></textarea>
                 
-                <button type="submit" className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow-md transition-colors">
-                  Post Magic Review
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className={`w-full font-bold py-3 rounded-lg shadow-md transition-colors text-white ${isSubmitting ? 'bg-gray-400' : 'bg-green-500 hover:bg-green-600'}`}
+                >
+                  {isSubmitting ? 'Posting...' : 'Post Magic Review'}
                 </button>
               </form>
-
             </motion.div>
           </div>
         )}
