@@ -9,7 +9,7 @@ const Hero = () => {
   // ------------------------------------------
   // WHATSAPP COMMUNITY LINK
   // ------------------------------------------
-  // 👇 Yahan apne WhatsApp Community / Group ka asli invite link dalein
+  // Yahan apne WhatsApp Community / Group ka asli invite link dalein
   const communityLink = "https://chat.whatsapp.com/#"; 
 
   return (
