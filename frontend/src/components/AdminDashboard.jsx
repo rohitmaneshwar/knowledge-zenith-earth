@@ -6,7 +6,7 @@ import { FaTrash, FaStar, FaQuoteLeft } from 'react-icons/fa';
 // ==========================================
 // Jab aap backend ko Render/PythonAnywhere par live karenge, 
 // toh yahan unka diya hua URL dalna hoga (Jaise: 'https://omkar-backend.onrender.com')
-const API_BASE_URL = 'http://localhost:5000'; 
+const API_BASE_URL = 'https://knowledge-zenith-earth.onrender.com'; 
 
 // ==========================================
 // ADMIN DASHBOARD COMPONENT
