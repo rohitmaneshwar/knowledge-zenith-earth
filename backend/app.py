@@ -25,9 +25,14 @@ instance_path = os.path.join(basedir, 'instance')
 if not os.path.exists(instance_path):
     os.makedirs(instance_path)
 
-# Database file ka exact path instance folder ke andar
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(instance_path, 'database.db')
+# SQLite path with extra safety for Render
+db_path = os.path.join(instance_path, 'database.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Extra connect_args for SQLite
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "connect_args": {"check_same_thread": False}
+}
 
 db = SQLAlchemy(app)
 
@@ -137,11 +142,12 @@ def home():
 # SECTION 6: APP RUNNER
 # ==========================================
 
+# --- Runner Section Update (Sabse Niche) ---
 if __name__ == '__main__':
     with app.app_context():
-        # Tables create karne ki koshish karein
-        db.create_all()
-        print(f"✅ Database and Tables initialized at: {os.path.join(instance_path, 'database.db')}")
+        # Purani tables delete karke nayi banayein (Hard Reset)
+        db.create_all() 
+        print(f"✅ Database Tables Checked/Created at: {db_path}")
     
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
