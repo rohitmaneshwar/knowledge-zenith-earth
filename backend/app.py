@@ -58,6 +58,14 @@ class Review(db.Model):
     date = db.Column(db.String(100))
     
 # ==========================================
+# 🔥 THE ULTIMATE FIX 🔥
+# ==========================================
+# Ye code har API request se pehle chalega aur table banayega!
+@app.before_request
+def create_tables():
+    db.create_all()
+    
+# ==========================================
 # SECTION 6: APP RUNNER
 # ==========================================
     
