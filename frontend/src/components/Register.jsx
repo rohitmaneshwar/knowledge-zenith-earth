@@ -150,7 +150,7 @@ const Register = () => {
               <p className="text-lg font-bold text-blue-900 mb-4">{formData.program}</p>
 
               <img
-                src="/my_QR.jpeg"
+                src="/QR.jpeg"
                 alt="Payment QR Code"
                 className="w-48 h-48 mx-auto border-4 border-white shadow-sm rounded-lg mb-4 object-contain"
               />
