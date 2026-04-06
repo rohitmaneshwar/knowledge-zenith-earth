@@ -56,6 +56,17 @@ class Review(db.Model):
     rating = db.Column(db.Integer, nullable=False)
     message = db.Column(db.Text, nullable=False)
     date = db.Column(db.String(100))
+    
+# ==========================================
+# SECTION 6: APP RUNNER
+# ==========================================
+    
+# --- Runner Section Update (Sabse Niche) ---
+if __name__ == '__main__':
+    with app.app_context():
+        # Purani tables delete karke nayi banayein (Hard Reset)
+        db.create_all() 
+        print(f"✅ Database Tables Checked/Created at: {db_path}")
 
 # ==========================================
 # SECTION 3: ADMIN SECURITY (LOGIN)
@@ -138,16 +149,7 @@ def get_reviews():
 def home():
     return "Knowledge Zenith API is Live and Running!"
 
-# ==========================================
-# SECTION 6: APP RUNNER
-# ==========================================
 
-# --- Runner Section Update (Sabse Niche) ---
-if __name__ == '__main__':
-    with app.app_context():
-        # Purani tables delete karke nayi banayein (Hard Reset)
-        db.create_all() 
-        print(f"✅ Database Tables Checked/Created at: {db_path}")
     
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
