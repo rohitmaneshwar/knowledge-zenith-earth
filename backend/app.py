@@ -69,6 +69,21 @@ if __name__ == '__main__':
         print(f"✅ Database Tables Checked/Created at: {db_path}")
 
 # ==========================================
+# 🔥 EMERGENCY DATABASE SETUP ROUTE
+# ==========================================
+@app.route('/api/setup-db')
+def setup_database():
+    try:
+        db.create_all()
+        return "<h1>✅ BOOM! Database and Tables created successfully!</h1><p>Ab aap /api/users ya Vercel website check kar sakte hain.</p>"
+    except Exception as e:
+        return f"<h1>❌ Error:</h1> <p>{str(e)}</p>"
+        
+@app.route('/')
+def home():
+    return "Knowledge Zenith API is Live and Running!"
+
+# ==========================================
 # SECTION 3: ADMIN SECURITY (LOGIN)
 # ==========================================
 
@@ -144,10 +159,6 @@ def get_reviews():
     except Exception as e:
         print(f"Error in fetching reviews: {e}")
         return jsonify([])
-
-@app.route('/')
-def home():
-    return "Knowledge Zenith API is Live and Running!"
 
 
     
