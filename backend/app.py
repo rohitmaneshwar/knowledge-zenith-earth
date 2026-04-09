@@ -1,4 +1,7 @@
 import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -18,19 +21,15 @@ CORS(app)
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-123')
 
-# --- DATABASE PATH LOGIC (Instance Folder Fix) ---
 basedir = os.path.abspath(os.path.dirname(__file__))
 instance_path = os.path.join(basedir, 'instance')
 
-# Agar 'instance' folder nahi hai (Render par), toh ise bana do
 if not os.path.exists(instance_path):
     os.makedirs(instance_path)
 
-# SQLite path with extra safety for Render
 db_path = os.path.join(instance_path, 'database.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# Extra connect_args for SQLite
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "connect_args": {"check_same_thread": False}
 }
@@ -58,7 +57,6 @@ class Review(db.Model):
     message = db.Column(db.Text, nullable=False)
     date = db.Column(db.String(100))
 
-# Naya Table Login/Signup ke liye
 class StudentAccount(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -66,13 +64,33 @@ class StudentAccount(db.Model):
     phone = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False) 
 
-# ==========================================
-# 🔥 THE ULTIMATE FIX 🔥
-# ==========================================
-# Ye code har API request se pehle chalega aur table banayega!
 @app.before_request
 def create_tables():
     db.create_all()
+
+# ==========================================
+# 🌟 EMAIL NOTIFICATION FUNCTION 🌟
+# ==========================================
+def send_email_notification(to_email, user_name, subject, message_body):
+    try:
+        # 🔴 DHYAN DEIN: Yahan apni details daalein
+        sender_email = "rohittech045@gmail.com"  # Apni Gmail ID
+        sender_password = "ewvwmgfenjuyovkb" # Google App Password
+
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(message_body, 'html'))
+
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+        server.quit()
+        print(f"Email sent successfully to {to_email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
 
 # ==========================================
 # SECTION 3: EMERGENCY DB SETUP & HOME
@@ -90,15 +108,10 @@ def setup_database():
 def home():
     return "Knowledge Zenith API is Live and Running!"
 
-# ==========================================
-# SECTION 4: ADMIN SECURITY (LOGIN)
-# ==========================================
-
 @app.route('/api/admin/login', methods=['POST'])
 def admin_login():
     data = request.json
     real_password = os.environ.get("ADMIN_PASSWORD", "admin123")
-    
     if data and data.get('password') == real_password:
         return jsonify({"message": "Access Granted"}), 200
     else:
@@ -117,13 +130,23 @@ def signup():
             return jsonify({"message": "Email already registered!"}), 400
         
         hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
-        
         new_account = StudentAccount(
             name=data['name'], email=data['email'],
             phone=data['phone'], password=hashed_password
         )
         db.session.add(new_account)
         db.session.commit()
+
+        # 🌟 EMAIL BHEJNE KA CODE 🌟
+        html_message = f"""
+        <h2>Welcome to Knowledge Zenith Earth, {data['name']}! 🌍</h2>
+        <p>Your account has been successfully created.</p>
+        <p><strong>Your Registered Email:</strong> {data['email']}</p>
+        <p>You can now log in to access our premium courses and content.</p>
+        <br><p>Best Regards,<br>Team Knowledge Zenith</p>
+        """
+        send_email_notification(data['email'], data['name'], "Welcome to Knowledge Zenith Earth!", html_message)
+
         return jsonify({"message": "Account created successfully!"}), 201
     except Exception as e:
         return jsonify({"message": str(e)}), 500
@@ -134,7 +157,24 @@ def login():
     user = StudentAccount.query.filter_by(email=data['email']).first()
     
     if user and check_password_hash(user.password, data['password']):
-        return jsonify({"message": "Login Successful", "name": user.name, "email": user.email}), 200
+        
+        # 🌟 SECURITY ALERT EMAIL 🌟
+        login_message = f"""
+        <h3>Hello {user.name},</h3>
+        <p>We noticed a successful login to your Knowledge Zenith Earth account just now.</p>
+        <p>If this was you, no further action is needed.</p>
+        <p>If this wasn't you, please reset your password immediately on our website.</p>
+        <br><p>Stay safe,<br>Team Knowledge Zenith</p>
+        """
+        send_email_notification(user.email, user.name, "New Login Alert - Knowledge Zenith", login_message)
+
+        # Phone number bhi bhej rahe hain taaki profile mein dikh sake
+        return jsonify({
+            "message": "Login Successful", 
+            "name": user.name, 
+            "email": user.email,
+            "phone": user.phone
+        }), 200
     else:
         return jsonify({"message": "Invalid Email or Password"}), 401
 
@@ -142,7 +182,6 @@ def login():
 def forgot_password():
     data = request.json
     user = StudentAccount.query.filter((StudentAccount.email == data['identifier']) | (StudentAccount.phone == data['identifier'])).first()
-    
     if user:
         return jsonify({"message": "User found! You can now reset your password.", "email": user.email}), 200
     else:
@@ -152,7 +191,6 @@ def forgot_password():
 def reset_password():
     data = request.json
     user = StudentAccount.query.filter_by(email=data['email']).first()
-    
     if user:
         user.password = generate_password_hash(data['new_password'], method='pbkdf2:sha256')
         db.session.commit()
@@ -223,10 +261,6 @@ def get_reviews():
         print(f"Error in fetching reviews: {e}")
         return jsonify([])
 
-# ==========================================
-# SECTION 7: APP RUNNER (SABSE NICHE)
-# ==========================================
-# Yeh block hamesha file ke end mein hona chahiye
 if __name__ == '__main__':
     with app.app_context():
         db.create_all() 
