@@ -125,9 +125,16 @@ def admin_login():
 def signup():
     try:
         data = request.json
-        existing_user = StudentAccount.query.filter_by(email=data['email']).first()
-        if existing_user:
+        
+        # 1. Email check karein
+        existing_email = StudentAccount.query.filter_by(email=data['email']).first()
+        if existing_email:
             return jsonify({"message": "Email already registered!"}), 400
+            
+        # 🌟 2. NAYA CODE: Phone number check karein 🌟
+        existing_phone = StudentAccount.query.filter_by(phone=data['phone']).first()
+        if existing_phone:
+            return jsonify({"message": "Phone number already registered!"}), 400
         
         hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
         new_account = StudentAccount(
@@ -137,7 +144,7 @@ def signup():
         db.session.add(new_account)
         db.session.commit()
 
-        # 🌟 EMAIL BHEJNE KA CODE 🌟
+        # Email Notification (Agar aapne email set kiya hai toh)
         html_message = f"""
         <h2>Welcome to Knowledge Zenith Earth, {data['name']}! 🌍</h2>
         <p>Your account has been successfully created.</p>
@@ -231,6 +238,23 @@ def get_all_users():
     except Exception as e:
         print(f"Error in fetching users: {e}")
         return jsonify({"message": "Could not fetch users"}), 500
+    
+# ==========================================
+# ADMIN DELETE USER API
+# ==========================================
+@app.route('/api/users/<int:id>', methods=['DELETE'])
+def delete_user(id):
+    try:
+        user_to_delete = User.query.get(id)
+        if user_to_delete:
+            db.session.delete(user_to_delete)
+            db.session.commit()
+            return jsonify({"message": "User deleted successfully"}), 200
+        else:
+            return jsonify({"message": "User not found"}), 404
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        return jsonify({"message": "Could not delete user"}), 500
 
 @app.route('/api/reviews', methods=['POST'])
 def add_review():
