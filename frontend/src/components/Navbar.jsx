@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars, FaTimes, FaEnvelope, FaPhone } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import AuthModal from './AuthModal'; // Dhyan dein: Agar AuthModal kisi aur folder mein hai toh path theek kar lein
+import AuthModal from './AuthModal';
 
-// ==========================================
-// NAVBAR COMPONENT: Website ki Top Menu Bar
-// ==========================================
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false); // Mobile Menu ke liye
-  const [isAuthOpen, setIsAuthOpen] = useState(false); // Login Popup ke liye
-  const [loggedInUser, setLoggedInUser] = useState(null); // User ka data
+  const [isOpen, setIsOpen] = useState(false); 
+  const [isAuthOpen, setIsAuthOpen] = useState(false); 
+  const [loggedInUser, setLoggedInUser] = useState(null); 
+  
+  // 🌟 Naya State: Profile Dropdown kholne ke liye
+  const [showProfile, setShowProfile] = useState(false); 
 
-  // Page load hone par check karein ki user pehle se login hai ya nahi
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -19,27 +18,23 @@ const Navbar = () => {
     }
   }, []);
 
-  // Login successful hone par
   const handleLoginSuccess = (userData) => {
     setLoggedInUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData)); // Browser mein save kar diya
+    localStorage.setItem('user', JSON.stringify(userData)); 
   };
 
-  // Logout karne par
   const handleLogout = () => {
     setLoggedInUser(null);
+    setShowProfile(false); // Logout hone par dropdown band kar do
     localStorage.removeItem('user');
   };
 
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
+  const toggleMenu = () => setIsOpen(!isOpen);
 
   return (
     <>
       <nav className="flex justify-between items-center py-5 px-6 md:px-10 bg-white shadow-md sticky top-0 z-50">
         
-        {/* LOGO */}
         <div className="text-xl md:text-2xl font-extrabold text-blue-900 cursor-pointer transition transform hover:scale-105">
           <a href="#home">Knowledge Zenith Earth 🌎</a>
         </div>
@@ -51,16 +46,53 @@ const Navbar = () => {
           <li><a href="#programs" className="hover:text-blue-600 transition">Programs</a></li>
           <li><a href="#feedback" className="hover:text-blue-600 transition">Reviews</a></li>
           
-          {/* 🌟 DESKTOP LOGIN / LOGOUT BUTTON 🌟 */}
-          <li>
+          {/* 🌟 DESKTOP PROFILE DROPDOWN 🌟 */}
+          <li className="relative">
             {loggedInUser ? (
-              <div className="flex items-center gap-3">
-                <span className="font-bold text-blue-900 bg-blue-50 px-3 py-1 rounded-full">
-                  Hi, {loggedInUser.name.split(' ')[0]} 👋
-                </span>
-                <button onClick={handleLogout} className="text-red-500 font-bold hover:text-red-700">
-                  Logout
+              <div>
+                <button 
+                  onClick={() => setShowProfile(!showProfile)} 
+                  className="flex items-center gap-2 font-bold text-blue-900 bg-blue-50 px-4 py-2 rounded-full border border-blue-100 hover:bg-blue-100 transition"
+                >
+                  <span>Hi, {loggedInUser.name.split(' ')[0]} 👋</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
+
+                {/* Profile Box (Jab click karenge tab khulega) */}
+                <AnimatePresence>
+                  {showProfile && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 p-5 z-50"
+                    >
+                      <div className="flex items-center gap-3 mb-4 border-b pb-4">
+                        <div className="w-12 h-12 bg-blue-900 text-white rounded-full flex items-center justify-center text-xl font-bold">
+                          {loggedInUser.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-gray-900">{loggedInUser.name}</h4>
+                          <p className="text-xs text-gray-500">Student Account</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 mb-4 text-sm text-gray-600">
+                        <p className="flex items-center gap-2"><FaEnvelope className="text-blue-500" /> {loggedInUser.email}</p>
+                        {loggedInUser.phone && <p className="flex items-center gap-2"><FaPhone className="text-blue-500" /> {loggedInUser.phone}</p>}
+                      </div>
+
+                      <div className="bg-blue-50 p-3 rounded-lg mb-4 text-sm text-blue-800">
+                        <p><strong>Welcome back!</strong> 🌟<br/> Explore our courses and track your progress from here.</p>
+                      </div>
+
+                      <button 
+                        onClick={handleLogout} 
+                        className="w-full bg-red-50 text-red-600 font-bold py-2 rounded-lg hover:bg-red-100 transition"
+                      >
+                        Secure Logout
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ) : (
               <button 
@@ -96,11 +128,10 @@ const Navbar = () => {
                 <li><a href="#programs" onClick={toggleMenu} className="block py-3 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">Programs</a></li>
                 <li><a href="#feedback" onClick={toggleMenu} className="block py-3 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">Reviews</a></li>
                 
-                {/* 🌟 MOBILE LOGIN / LOGOUT BUTTON 🌟 */}
                 <li className="pt-2 border-t border-gray-100">
                   {loggedInUser ? (
                     <div className="flex justify-between items-center py-3 px-2">
-                      <span className="font-bold text-blue-900">Hi, {loggedInUser.name}</span>
+                      <span className="font-bold text-blue-900">Hi, {loggedInUser.name.split(' ')[0]}</span>
                       <button onClick={() => { handleLogout(); toggleMenu(); }} className="text-red-500 font-bold">
                         Logout
                       </button>
@@ -120,8 +151,6 @@ const Navbar = () => {
         </AnimatePresence>
       </nav>
 
-      {/* 🌟 AUTH MODAL (POPUP) RENDER 🌟 */}
-      {/* Yeh code background mein rahega aur jab isAuthOpen true hoga tab screen par aayega */}
       <AuthModal 
         isOpen={isAuthOpen} 
         onClose={() => setIsAuthOpen(false)} 
