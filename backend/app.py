@@ -1,5 +1,6 @@
 import os
 import smtplib
+import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
@@ -16,7 +17,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv()
 app = Flask(__name__)
 
-# CORS: Frontend (Vercel) ko connect karne ke liye
 CORS(app)
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-123')
@@ -57,11 +57,12 @@ class Review(db.Model):
     message = db.Column(db.Text, nullable=False)
     date = db.Column(db.String(100))
 
+# 🌟 YAHAN SE UNIQUE HATA DIYA HAI 🌟
 class StudentAccount(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    phone = db.Column(db.String(20), unique=True, nullable=False)
+    email = db.Column(db.String(100), nullable=False) 
+    phone = db.Column(db.String(20), nullable=False)  
     password = db.Column(db.String(200), nullable=False) 
 
 @app.before_request
@@ -69,13 +70,13 @@ def create_tables():
     db.create_all()
 
 # ==========================================
-# 🌟 EMAIL NOTIFICATION FUNCTION 🌟
+# EMAIL NOTIFICATION FUNCTION
 # ==========================================
 def send_email_notification(to_email, user_name, subject, message_body):
     try:
-        # 🔴 DHYAN DEIN: Yahan apni details daalein
-        sender_email = "rohittech045@gmail.com"  # Apni Gmail ID
-        sender_password = "ewvwmgfenjuyovkb" # Google App Password
+        # 🔴 APNI GMAIL ID AUR 16-DIGIT PASSWORD YAHAN DAALEIN 🔴
+        sender_email = "aapki.email@gmail.com"  
+        sender_password = "yahan apna 16 digit ka app password daalein" 
 
         msg = MIMEMultipart()
         msg['From'] = sender_email
@@ -93,20 +94,26 @@ def send_email_notification(to_email, user_name, subject, message_body):
         print(f"Failed to send email: {e}")
 
 # ==========================================
-# SECTION 3: EMERGENCY DB SETUP & HOME
+# SECTION 3: EMERGENCY DB RESET & HOME
 # ==========================================
 
 @app.route('/api/setup-db')
 def setup_database():
     try:
+        # 🌟 NAYA CODE: Purani strict tables delete karke nayi free tables banayega
+        db.drop_all()
         db.create_all()
-        return "<h1>✅ BOOM! Database and Tables created successfully!</h1><p>Ab aap /api/users ya Vercel website check kar sakte hain.</p>"
+        return "<h1>✅ BOOM! Database Reset Successful!</h1><p>Ab aap ek hi email se kitni baar bhi test kar sakte hain.</p>"
     except Exception as e:
         return f"<h1>❌ Error:</h1> <p>{str(e)}</p>"
         
 @app.route('/')
 def home():
     return "Knowledge Zenith API is Live and Running!"
+
+# ==========================================
+# SECTION 4: ADMIN SECURITY & APIs
+# ==========================================
 
 @app.route('/api/admin/login', methods=['POST'])
 def admin_login():
@@ -117,6 +124,20 @@ def admin_login():
     else:
         return jsonify({"message": "Access Denied"}), 401
 
+@app.route('/api/users/<int:id>', methods=['DELETE'])
+def delete_user(id):
+    try:
+        user_to_delete = User.query.get(id)
+        if user_to_delete:
+            db.session.delete(user_to_delete)
+            db.session.commit()
+            return jsonify({"message": "User deleted successfully"}), 200
+        else:
+            return jsonify({"message": "User not found"}), 404
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        return jsonify({"message": "Could not delete user"}), 500
+
 # ==========================================
 # SECTION 5: STUDENT AUTHENTICATION (LOGIN/SIGNUP)
 # ==========================================
@@ -126,15 +147,7 @@ def signup():
     try:
         data = request.json
         
-        # 1. Email check karein
-        existing_email = StudentAccount.query.filter_by(email=data['email']).first()
-        if existing_email:
-            return jsonify({"message": "Email already registered!"}), 400
-            
-        # 🌟 2. NAYA CODE: Phone number check karein 🌟
-        existing_phone = StudentAccount.query.filter_by(phone=data['phone']).first()
-        if existing_phone:
-            return jsonify({"message": "Phone number already registered!"}), 400
+        # 🌟 YAHAN SE DUPLICATE CHECK KARNE WALA CODE HATA DIYA HAI 🌟
         
         hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
         new_account = StudentAccount(
@@ -144,15 +157,13 @@ def signup():
         db.session.add(new_account)
         db.session.commit()
 
-        # Email Notification (Agar aapne email set kiya hai toh)
         html_message = f"""
         <h2>Welcome to Knowledge Zenith Earth, {data['name']}! 🌍</h2>
         <p>Your account has been successfully created.</p>
         <p><strong>Your Registered Email:</strong> {data['email']}</p>
-        <p>You can now log in to access our premium courses and content.</p>
         <br><p>Best Regards,<br>Team Knowledge Zenith</p>
         """
-        send_email_notification(data['email'], data['name'], "Welcome to Knowledge Zenith Earth!", html_message)
+        threading.Thread(target=send_email_notification, args=(data['email'], data['name'], "Welcome to Knowledge Zenith Earth!", html_message)).start()
 
         return jsonify({"message": "Account created successfully!"}), 201
     except Exception as e:
@@ -161,21 +172,17 @@ def signup():
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.json
+    # Agar ek email se bohot account ban gaye, toh ye sabse pehla wala uthayega testing ke liye
     user = StudentAccount.query.filter_by(email=data['email']).first()
     
     if user and check_password_hash(user.password, data['password']):
-        
-        # 🌟 SECURITY ALERT EMAIL 🌟
         login_message = f"""
         <h3>Hello {user.name},</h3>
         <p>We noticed a successful login to your Knowledge Zenith Earth account just now.</p>
-        <p>If this was you, no further action is needed.</p>
-        <p>If this wasn't you, please reset your password immediately on our website.</p>
-        <br><p>Stay safe,<br>Team Knowledge Zenith</p>
+        <p>If this wasn't you, please reset your password immediately.</p>
         """
-        send_email_notification(user.email, user.name, "New Login Alert - Knowledge Zenith", login_message)
+        threading.Thread(target=send_email_notification, args=(user.email, user.name, "New Login Alert - Knowledge Zenith", login_message)).start()
 
-        # Phone number bhi bhej rahe hain taaki profile mein dikh sake
         return jsonify({
             "message": "Login Successful", 
             "name": user.name, 
@@ -238,23 +245,6 @@ def get_all_users():
     except Exception as e:
         print(f"Error in fetching users: {e}")
         return jsonify({"message": "Could not fetch users"}), 500
-    
-# ==========================================
-# ADMIN DELETE USER API
-# ==========================================
-@app.route('/api/users/<int:id>', methods=['DELETE'])
-def delete_user(id):
-    try:
-        user_to_delete = User.query.get(id)
-        if user_to_delete:
-            db.session.delete(user_to_delete)
-            db.session.commit()
-            return jsonify({"message": "User deleted successfully"}), 200
-        else:
-            return jsonify({"message": "User not found"}), 404
-    except Exception as e:
-        print(f"Error deleting user: {e}")
-        return jsonify({"message": "Could not delete user"}), 500
 
 @app.route('/api/reviews', methods=['POST'])
 def add_review():
