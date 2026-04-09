@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaEnvelope, FaLock, FaUser, FaPhone } from 'react-icons/fa';
+import { FaTimes, FaEnvelope, FaLock, FaUser, FaPhone, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const API_BASE_URL = 'https://knowledge-zenith-earth.onrender.com';
 
 const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
-  // Views: 'login', 'signup', 'forgot', 'reset'
   const [view, setView] = useState('login'); 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ text: '', type: '' }); // type: 'error' or 'success'
+  const [message, setMessage] = useState({ text: '', type: '' }); 
 
-  // Form Data States
+  // 🌟 Naye States: Password dikhane/chhupane ke liye
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', password: '', 
-    identifier: '', // Forgot password ke liye (email ya phone)
+    identifier: '', 
     new_password: '', confirm_password: ''
   });
 
@@ -26,11 +28,17 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     setTimeout(() => setMessage({ text: '', type: '' }), 5000);
   };
 
+  // Jab Modal band ho, toh state reset kar do (Taki aglibaar password hide hi rahe)
+  const handleClose = () => {
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    onClose();
+  };
+
   // ==========================================
-  // API CALLS (Backend se connection)
+  // API CALLS (Backend Connection)
   // ==========================================
 
-  // 1. LOGIN
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -43,8 +51,8 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
       const data = await res.json();
       if (res.ok) {
         showMessage("✅ Login Successful!", "success");
-        onLoginSuccess({ name: data.name, email: data.email }); // Navbar ko batane ke liye
-        setTimeout(onClose, 1500); // Popup band karo
+        onLoginSuccess({ name: data.name, email: data.email }); 
+        setTimeout(handleClose, 1500); 
       } else {
         showMessage(`❌ ${data.message}`, "error");
       }
@@ -54,7 +62,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     setLoading(false);
   };
 
-  // 2. SIGN UP (Register)
   const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -70,7 +77,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
       const data = await res.json();
       if (res.ok) {
         showMessage("✅ Account Created! Please Login.", "success");
-        setView('login'); // Wapas login screen par bhejo
+        setView('login'); 
       } else {
         showMessage(`❌ ${data.message}`, "error");
       }
@@ -80,7 +87,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     setLoading(false);
   };
 
-  // 3. FORGOT PASSWORD (Find Account)
   const handleForgot = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -92,9 +98,9 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
       });
       const data = await res.json();
       if (res.ok) {
-        setFormData({ ...formData, email: data.email }); // Email save kar lo reset ke liye
+        setFormData({ ...formData, email: data.email }); 
         showMessage("✅ Account Found! Enter new password.", "success");
-        setView('reset'); // Reset screen par bhejo
+        setView('reset'); 
       } else {
         showMessage(`❌ ${data.message}`, "error");
       }
@@ -104,7 +110,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     setLoading(false);
   };
 
-  // 4. RESET PASSWORD (New Password Setup)
   const handleReset = async (e) => {
     e.preventDefault();
     if (formData.new_password !== formData.confirm_password) {
@@ -141,11 +146,10 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
         className="bg-white rounded-2xl p-8 w-full max-w-md relative shadow-2xl">
         
         {/* Close Button */}
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl">
+        <button onClick={handleClose} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl">
           <FaTimes />
         </button>
 
-        {/* Dynamic Title */}
         <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
           {view === 'login' && "Welcome Back"}
           {view === 'signup' && "Create an Account"}
@@ -153,7 +157,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
           {view === 'reset' && "Create New Password"}
         </h3>
 
-        {/* Message Alert */}
         {message.text && (
           <div className={`mb-4 p-3 rounded text-sm font-bold text-center ${message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
             {message.text}
@@ -167,9 +170,21 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
               <FaEnvelope className="absolute top-3 left-3 text-gray-400" />
               <input type="email" name="email" required placeholder="Email Address" onChange={handleChange} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
             </div>
+            {/* 🌟 Login Password + Eye Icon */}
             <div className="relative">
               <FaLock className="absolute top-3 left-3 text-gray-400" />
-              <input type="password" name="password" required placeholder="Password" onChange={handleChange} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              <input 
+                type={showPassword ? "text" : "password"} 
+                name="password" required placeholder="Password" onChange={handleChange} 
+                className="w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)} 
+                className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
             </div>
             <div className="flex justify-end">
               <button type="button" onClick={() => setView('forgot')} className="text-sm text-blue-600 hover:underline">Forgot Password?</button>
@@ -198,9 +213,21 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
               <FaPhone className="absolute top-3 left-3 text-gray-400" />
               <input type="tel" name="phone" required placeholder="WhatsApp Number" onChange={handleChange} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
             </div>
+            {/* 🌟 Signup Password + Eye Icon */}
             <div className="relative">
               <FaLock className="absolute top-3 left-3 text-gray-400" />
-              <input type="password" name="password" required placeholder="Create Password" onChange={handleChange} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              <input 
+                type={showPassword ? "text" : "password"} 
+                name="password" required placeholder="Create Password" onChange={handleChange} 
+                className="w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)} 
+                className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
             </div>
             <button type="submit" disabled={loading} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors">
               {loading ? 'Creating Account...' : 'Sign Up'}
@@ -232,13 +259,37 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
         {view === 'reset' && (
           <form onSubmit={handleReset} className="space-y-4">
             <p className="text-sm text-green-600 font-bold mb-4 text-center">Account verified! Create a new password.</p>
+            {/* 🌟 New Password + Eye Icon */}
             <div className="relative">
               <FaLock className="absolute top-3 left-3 text-gray-400" />
-              <input type="password" name="new_password" required placeholder="New Password" onChange={handleChange} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              <input 
+                type={showPassword ? "text" : "password"} 
+                name="new_password" required placeholder="New Password" onChange={handleChange} 
+                className="w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)} 
+                className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
             </div>
+            {/* 🌟 Confirm Password + Eye Icon */}
             <div className="relative">
               <FaLock className="absolute top-3 left-3 text-gray-400" />
-              <input type="password" name="confirm_password" required placeholder="Re-enter New Password" onChange={handleChange} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              <input 
+                type={showConfirmPassword ? "text" : "password"} 
+                name="confirm_password" required placeholder="Re-enter New Password" onChange={handleChange} 
+                className="w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
+                className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
             </div>
             <button type="submit" disabled={loading} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors">
               {loading ? 'Updating...' : 'Set New Password'}
