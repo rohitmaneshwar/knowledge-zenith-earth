@@ -245,6 +245,52 @@ def get_all_users():
     except Exception as e:
         print(f"Error in fetching users: {e}")
         return jsonify({"message": "Could not fetch users"}), 500
+    
+# ==========================================
+# ADMIN DELETE USER API
+# ==========================================
+@app.route('/api/users/<int:id>', methods=['DELETE'])
+def delete_user(id):
+    try:
+        user_to_delete = User.query.get(id)
+        if user_to_delete:
+            db.session.delete(user_to_delete)
+            db.session.commit()
+            return jsonify({"message": "User deleted successfully"}), 200
+        else:
+            return jsonify({"message": "User not found"}), 404
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        return jsonify({"message": "Could not delete user"}), 500
+    
+# ==========================================
+# REGISTERED STUDENTS FETCH & DELETE APIs
+# ==========================================
+
+@app.route('/api/students', methods=['GET'])
+def get_all_students():
+    try:
+        students = StudentAccount.query.order_by(StudentAccount.id.desc()).all()
+        output = [{"id": s.id, "name": s.name, "email": s.email, "phone": s.phone} for s in students]
+        return jsonify(output)
+    except Exception as e:
+        print(f"Error in fetching students: {e}")
+        return jsonify({"message": "Could not fetch students"}), 500
+
+@app.route('/api/students/<int:id>', methods=['DELETE'])
+def delete_student(id):
+    try:
+        student_to_delete = StudentAccount.query.get(id)
+        if student_to_delete:
+            db.session.delete(student_to_delete)
+            db.session.commit()
+            return jsonify({"message": "Student deleted successfully"}), 200
+        else:
+            return jsonify({"message": "Student not found"}), 404
+    except Exception as e:
+        print(f"Error deleting student: {e}")
+        return jsonify({"message": "Could not delete student"}), 500
+
 
 @app.route('/api/reviews', methods=['POST'])
 def add_review():
