@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # ==========================================
 # SECTION 1: APP SETUP & DATABASE CONFIG
@@ -56,7 +57,15 @@ class Review(db.Model):
     rating = db.Column(db.Integer, nullable=False)
     message = db.Column(db.Text, nullable=False)
     date = db.Column(db.String(100))
-    
+
+# Naya Table Login/Signup ke liye
+class StudentAccount(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    phone = db.Column(db.String(20), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False) 
+
 # ==========================================
 # 🔥 THE ULTIMATE FIX 🔥
 # ==========================================
@@ -64,21 +73,11 @@ class Review(db.Model):
 @app.before_request
 def create_tables():
     db.create_all()
-    
-# ==========================================
-# SECTION 6: APP RUNNER
-# ==========================================
-    
-# --- Runner Section Update (Sabse Niche) ---
-if __name__ == '__main__':
-    with app.app_context():
-        # Purani tables delete karke nayi banayein (Hard Reset)
-        db.create_all() 
-        print(f"✅ Database Tables Checked/Created at: {db_path}")
 
 # ==========================================
-# 🔥 EMERGENCY DATABASE SETUP ROUTE
+# SECTION 3: EMERGENCY DB SETUP & HOME
 # ==========================================
+
 @app.route('/api/setup-db')
 def setup_database():
     try:
@@ -92,7 +91,7 @@ def home():
     return "Knowledge Zenith API is Live and Running!"
 
 # ==========================================
-# SECTION 3: ADMIN SECURITY (LOGIN)
+# SECTION 4: ADMIN SECURITY (LOGIN)
 # ==========================================
 
 @app.route('/api/admin/login', methods=['POST'])
@@ -106,7 +105,63 @@ def admin_login():
         return jsonify({"message": "Access Denied"}), 401
 
 # ==========================================
-# SECTION 4: REGISTRATION & REVIEWS APIs
+# SECTION 5: STUDENT AUTHENTICATION (LOGIN/SIGNUP)
+# ==========================================
+
+@app.route('/api/auth/signup', methods=['POST'])
+def signup():
+    try:
+        data = request.json
+        existing_user = StudentAccount.query.filter_by(email=data['email']).first()
+        if existing_user:
+            return jsonify({"message": "Email already registered!"}), 400
+        
+        hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
+        
+        new_account = StudentAccount(
+            name=data['name'], email=data['email'],
+            phone=data['phone'], password=hashed_password
+        )
+        db.session.add(new_account)
+        db.session.commit()
+        return jsonify({"message": "Account created successfully!"}), 201
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.json
+    user = StudentAccount.query.filter_by(email=data['email']).first()
+    
+    if user and check_password_hash(user.password, data['password']):
+        return jsonify({"message": "Login Successful", "name": user.name, "email": user.email}), 200
+    else:
+        return jsonify({"message": "Invalid Email or Password"}), 401
+
+@app.route('/api/auth/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.json
+    user = StudentAccount.query.filter((StudentAccount.email == data['identifier']) | (StudentAccount.phone == data['identifier'])).first()
+    
+    if user:
+        return jsonify({"message": "User found! You can now reset your password.", "email": user.email}), 200
+    else:
+        return jsonify({"message": "No account found with this Email/Phone."}), 404
+
+@app.route('/api/auth/reset-password', methods=['POST'])
+def reset_password():
+    data = request.json
+    user = StudentAccount.query.filter_by(email=data['email']).first()
+    
+    if user:
+        user.password = generate_password_hash(data['new_password'], method='pbkdf2:sha256')
+        db.session.commit()
+        return jsonify({"message": "Password updated successfully! You can login now."}), 200
+    else:
+        return jsonify({"message": "User not found!"}), 404
+
+# ==========================================
+# SECTION 6: REGISTRATION & REVIEWS APIs
 # ==========================================
 
 @app.route('/api/register', methods=['POST'])
@@ -125,7 +180,7 @@ def register():
         db.session.commit()
         return jsonify({"message": "Registration Info Saved Successfully!"}), 201
     except Exception as e:
-        print(f"Error in register: {e}") # Logs mein error dekhne ke liye
+        print(f"Error in register: {e}")
         return jsonify({"message": "Server Error"}), 500
 
 @app.route('/api/users', methods=['GET'])
@@ -146,7 +201,7 @@ def add_review():
         new_review = Review(
             name=data['name'], 
             program=data['program'],
-            rating=int(data['rating']), # Rating ko integer mein convert kiya
+            rating=int(data['rating']),
             message=data['message'],
             date=datetime.now().strftime("%d-%m-%Y")
         )
@@ -168,7 +223,14 @@ def get_reviews():
         print(f"Error in fetching reviews: {e}")
         return jsonify([])
 
-
-    
+# ==========================================
+# SECTION 7: APP RUNNER (SABSE NICHE)
+# ==========================================
+# Yeh block hamesha file ke end mein hona chahiye
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all() 
+        print(f"✅ Database Tables Checked/Created at: {db_path}")
+        
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
