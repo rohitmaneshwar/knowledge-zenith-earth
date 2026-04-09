@@ -75,8 +75,8 @@ def create_tables():
 def send_email_notification(to_email, user_name, subject, message_body):
     try:
         # 🔴 APNI GMAIL ID AUR 16-DIGIT PASSWORD YAHAN DAALEIN 🔴
-        sender_email = "aapki.email@gmail.com"  
-        sender_password = "yahan apna 16 digit ka app password daalein" 
+        sender_email = "rohittech045@gmail.com"  
+        sender_password = "ewvwmgfenjuyovkb" 
 
         msg = MIMEMultipart()
         msg['From'] = sender_email
@@ -100,7 +100,6 @@ def send_email_notification(to_email, user_name, subject, message_body):
 @app.route('/api/setup-db')
 def setup_database():
     try:
-        # 🌟 NAYA CODE: Purani strict tables delete karke nayi free tables banayega
         db.drop_all()
         db.create_all()
         return "<h1>✅ BOOM! Database Reset Successful!</h1><p>Ab aap ek hi email se kitni baar bhi test kar sakte hain.</p>"
@@ -124,6 +123,17 @@ def admin_login():
     else:
         return jsonify({"message": "Access Denied"}), 401
 
+@app.route('/api/users', methods=['GET'])
+def get_all_users():
+    try:
+        users = User.query.order_by(User.id.desc()).all()
+        output = [{"id": u.id, "name": u.name, "email": u.email, "phone": u.phone, 
+                   "program": u.program, "transaction_id": u.transaction_id, "date": u.date} for u in users]
+        return jsonify(output)
+    except Exception as e:
+        print(f"Error in fetching users: {e}")
+        return jsonify({"message": "Could not fetch users"}), 500
+
 @app.route('/api/users/<int:id>', methods=['DELETE'])
 def delete_user(id):
     try:
@@ -139,6 +149,34 @@ def delete_user(id):
         return jsonify({"message": "Could not delete user"}), 500
 
 # ==========================================
+# REGISTERED STUDENTS FETCH & DELETE APIs
+# ==========================================
+
+@app.route('/api/students', methods=['GET'])
+def get_all_students():
+    try:
+        students = StudentAccount.query.order_by(StudentAccount.id.desc()).all()
+        output = [{"id": s.id, "name": s.name, "email": s.email, "phone": s.phone} for s in students]
+        return jsonify(output)
+    except Exception as e:
+        print(f"Error in fetching students: {e}")
+        return jsonify({"message": "Could not fetch students"}), 500
+
+@app.route('/api/students/<int:id>', methods=['DELETE'])
+def delete_student(id):
+    try:
+        student_to_delete = StudentAccount.query.get(id)
+        if student_to_delete:
+            db.session.delete(student_to_delete)
+            db.session.commit()
+            return jsonify({"message": "Student deleted successfully"}), 200
+        else:
+            return jsonify({"message": "Student not found"}), 404
+    except Exception as e:
+        print(f"Error deleting student: {e}")
+        return jsonify({"message": "Could not delete student"}), 500
+
+# ==========================================
 # SECTION 5: STUDENT AUTHENTICATION (LOGIN/SIGNUP)
 # ==========================================
 
@@ -146,9 +184,6 @@ def delete_user(id):
 def signup():
     try:
         data = request.json
-        
-        # 🌟 YAHAN SE DUPLICATE CHECK KARNE WALA CODE HATA DIYA HAI 🌟
-        
         hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
         new_account = StudentAccount(
             name=data['name'], email=data['email'],
@@ -172,7 +207,6 @@ def signup():
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.json
-    # Agar ek email se bohot account ban gaye, toh ye sabse pehla wala uthayega testing ke liye
     user = StudentAccount.query.filter_by(email=data['email']).first()
     
     if user and check_password_hash(user.password, data['password']):
@@ -235,63 +269,6 @@ def register():
         print(f"Error in register: {e}")
         return jsonify({"message": "Server Error"}), 500
 
-@app.route('/api/users', methods=['GET'])
-def get_all_users():
-    try:
-        users = User.query.order_by(User.id.desc()).all()
-        output = [{"id": u.id, "name": u.name, "email": u.email, "phone": u.phone, 
-                   "program": u.program, "transaction_id": u.transaction_id, "date": u.date} for u in users]
-        return jsonify(output)
-    except Exception as e:
-        print(f"Error in fetching users: {e}")
-        return jsonify({"message": "Could not fetch users"}), 500
-    
-# ==========================================
-# ADMIN DELETE USER API
-# ==========================================
-@app.route('/api/users/<int:id>', methods=['DELETE'])
-def delete_user(id):
-    try:
-        user_to_delete = User.query.get(id)
-        if user_to_delete:
-            db.session.delete(user_to_delete)
-            db.session.commit()
-            return jsonify({"message": "User deleted successfully"}), 200
-        else:
-            return jsonify({"message": "User not found"}), 404
-    except Exception as e:
-        print(f"Error deleting user: {e}")
-        return jsonify({"message": "Could not delete user"}), 500
-    
-# ==========================================
-# REGISTERED STUDENTS FETCH & DELETE APIs
-# ==========================================
-
-@app.route('/api/students', methods=['GET'])
-def get_all_students():
-    try:
-        students = StudentAccount.query.order_by(StudentAccount.id.desc()).all()
-        output = [{"id": s.id, "name": s.name, "email": s.email, "phone": s.phone} for s in students]
-        return jsonify(output)
-    except Exception as e:
-        print(f"Error in fetching students: {e}")
-        return jsonify({"message": "Could not fetch students"}), 500
-
-@app.route('/api/students/<int:id>', methods=['DELETE'])
-def delete_student(id):
-    try:
-        student_to_delete = StudentAccount.query.get(id)
-        if student_to_delete:
-            db.session.delete(student_to_delete)
-            db.session.commit()
-            return jsonify({"message": "Student deleted successfully"}), 200
-        else:
-            return jsonify({"message": "Student not found"}), 404
-    except Exception as e:
-        print(f"Error deleting student: {e}")
-        return jsonify({"message": "Could not delete student"}), 500
-
-
 @app.route('/api/reviews', methods=['POST'])
 def add_review():
     try:
@@ -321,6 +298,9 @@ def get_reviews():
         print(f"Error in fetching reviews: {e}")
         return jsonify([])
 
+# ==========================================
+# SECTION 7: APP RUNNER
+# ==========================================
 if __name__ == '__main__':
     with app.app_context():
         db.create_all() 
