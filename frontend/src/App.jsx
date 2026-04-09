@@ -24,7 +24,6 @@ const MainWebsite = () => (
       <About />
       <Programs />
       <Testimonials />
-      <Register />
     </main>
     <Footer />
   </div>
