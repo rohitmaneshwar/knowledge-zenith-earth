@@ -16,6 +16,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', password: '', 
     identifier: '', 
+    otp: '',
     new_password: '', confirm_password: ''
   });
 
@@ -120,11 +121,12 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
       const res = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, new_password: formData.new_password })
+        // 🌟 OTP KO SATH MEIN BHEJEIN
+        body: JSON.stringify({ email: formData.email, otp: formData.otp, new_password: formData.new_password })
       });
       const data = await res.json();
       if (res.ok) {
-        showMessage("✅ Password Changed Successfully! Please Login.", "success");
+        showMessage("✅ Password Changed Successfully!", "success");
         setView('login');
       } else {
         showMessage(`❌ ${data.message}`, "error");
@@ -258,8 +260,16 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
         {/* 4. RESET PASSWORD FORM */}
         {view === 'reset' && (
           <form onSubmit={handleReset} className="space-y-4">
-            <p className="text-sm text-green-600 font-bold mb-4 text-center">Account verified! Create a new password.</p>
-            {/* 🌟 New Password + Eye Icon */}
+            <p className="text-sm text-green-600 font-bold mb-4 text-center">OTP has been sent to your email. Enter it below.</p>
+            
+            {/* 🌟 OTP Input Box */}
+            <div className="relative">
+              <input 
+                type="text" name="otp" required placeholder="Enter 6-Digit OTP" onChange={handleChange} maxLength="6"
+                className="w-full text-center tracking-widest font-bold text-lg px-4 py-2 border border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-blue-50" 
+              />
+            </div>
+
             <div className="relative">
               <FaLock className="absolute top-3 left-3 text-gray-400" />
               <input 
@@ -267,15 +277,11 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                 name="new_password" required placeholder="New Password" onChange={handleChange} 
                 className="w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
               />
-              <button 
-                type="button" 
-                onClick={() => setShowPassword(!showPassword)} 
-                className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
-              >
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-3 right-3 text-gray-500">
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
-            {/* 🌟 Confirm Password + Eye Icon */}
+
             <div className="relative">
               <FaLock className="absolute top-3 left-3 text-gray-400" />
               <input 
@@ -283,16 +289,16 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                 name="confirm_password" required placeholder="Re-enter New Password" onChange={handleChange} 
                 className="w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
               />
-              <button 
-                type="button" 
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
-                className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
-              >
+              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute top-3 right-3 text-gray-500">
                 {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
+
             <button type="submit" disabled={loading} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors">
               {loading ? 'Updating...' : 'Set New Password'}
+            </button>
+            <button type="button" onClick={() => setView('login')} className="w-full mt-2 text-gray-500 hover:text-gray-800 text-sm font-bold">
+              ← Back to Login
             </button>
           </form>
         )}
