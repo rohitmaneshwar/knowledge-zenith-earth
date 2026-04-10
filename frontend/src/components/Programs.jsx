@@ -82,13 +82,19 @@ const Programs = () => {
   }, []);
 
   const handleBuyClick = (course) => {
-    if (!userData) {
+    // 🌟 SMART FIX: Button dabate hi live check karega
+    const storedUser = localStorage.getItem('loggedInUser');
+    
+    if (!storedUser) {
       alert("⚠️ Please Login or Sign Up first to enroll in a program!");
       return;
     }
+    
+    // Agar logged in hai, toh data set kar do
+    setUserData(JSON.parse(storedUser));
     setSelectedCourse(course);
     setSuccessMessage('');
-    setTransactionId(''); // Reset ID on new click
+    setTransactionId(''); 
   };
 
   const handleSubmitPayment = async (e) => {
