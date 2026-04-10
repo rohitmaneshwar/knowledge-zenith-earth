@@ -1,4 +1,5 @@
 import os
+import random
 import smtplib
 import threading
 from email.mime.text import MIMEText
@@ -64,6 +65,7 @@ class StudentAccount(db.Model):
     email = db.Column(db.String(100), nullable=False) 
     phone = db.Column(db.String(20), nullable=False)  
     password = db.Column(db.String(200), nullable=False) 
+    reset_otp = db.Column(db.String(10), nullable=True) # 🌟 NAYA COLUMN OTP KE LIYE
 
 @app.before_request
 def create_tables():
@@ -230,8 +232,23 @@ def login():
 def forgot_password():
     data = request.json
     user = StudentAccount.query.filter((StudentAccount.email == data['identifier']) | (StudentAccount.phone == data['identifier'])).first()
+    
     if user:
-        return jsonify({"message": "User found! You can now reset your password.", "email": user.email}), 200
+        # 🌟 6-Digit OTP Generate Karein
+        otp = str(random.randint(100000, 999999))
+        user.reset_otp = otp
+        db.session.commit()
+
+        # 🌟 OTP Email Par Bhejein
+        otp_message = f"""
+        <h3>Password Reset Request</h3>
+        <p>Hello {user.name},</p>
+        <p>Your 6-digit OTP to reset your password is: <strong style="font-size:24px; color:blue;">{otp}</strong></p>
+        <p>Please enter this code along with your new password.</p>
+        """
+        threading.Thread(target=send_email_notification, args=(user.email, user.name, "Your Password Reset OTP", otp_message)).start()
+
+        return jsonify({"message": "OTP sent to your registered Email!", "email": user.email}), 200
     else:
         return jsonify({"message": "No account found with this Email/Phone."}), 404
 
@@ -239,8 +256,14 @@ def forgot_password():
 def reset_password():
     data = request.json
     user = StudentAccount.query.filter_by(email=data['email']).first()
+    
+    # 🌟 OTP Match karna zaroori hai
     if user:
+        if user.reset_otp != data['otp']:
+            return jsonify({"message": "Invalid OTP Code!"}), 400
+            
         user.password = generate_password_hash(data['new_password'], method='pbkdf2:sha256')
+        user.reset_otp = None  # Password change hote hi OTP delete kar do
         db.session.commit()
         return jsonify({"message": "Password updated successfully! You can login now."}), 200
     else:
