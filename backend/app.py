@@ -29,7 +29,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-123')
 # 🌟 ULTRA-SMART DATABASE CONNECTION 🌟
 # Yeh Render mein 'databases_url' aur 'DATABASE_URL' dono dhoondhega
 
-db_url = os.environ.get('DATABASES_URL') or os.environ.get('DATABASE_URL')
+db_url = os.environ.get('DATABASES_URL') 
 
 if db_url:
     # SQLAlchemy requires 'postgresql://' instead of 'postgres://'
