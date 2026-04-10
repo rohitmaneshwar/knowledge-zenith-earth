@@ -257,14 +257,32 @@ def reset_password():
     data = request.json
     user = StudentAccount.query.filter_by(email=data['email']).first()
     
-    # 🌟 OTP Match karna zaroori hai
     if user:
+        # 1. OTP Check karein
         if user.reset_otp != data['otp']:
             return jsonify({"message": "Invalid OTP Code!"}), 400
             
+        # 2. Naya Password Save Karein
         user.password = generate_password_hash(data['new_password'], method='pbkdf2:sha256')
-        user.reset_otp = None  # Password change hote hi OTP delete kar do
+        user.reset_otp = None  # OTP delete karein
         db.session.commit()
+
+        # 🌟 3. NAYA CODE: Password Change Success ka Email Bhejein 🌟
+        success_message = f"""
+        <div style="font-family: Arial, sans-serif; color: #333;">
+            <h2 style="color: #28a745;">Password Changed Successfully! 🔒</h2>
+            <p>Hello <strong>{user.name}</strong>,</p>
+            <p>Your password for Knowledge Zenith Earth has been successfully updated.</p>
+            <p>You can now log in to your account using your new password.</p>
+            <br>
+            <hr style="border: none; border-top: 1px solid #eee;" />
+            <p style="font-size: 12px; color: #888;">
+                If you did not make this change, please contact our support team immediately.
+            </p>
+        </div>
+        """
+        threading.Thread(target=send_email_notification, args=(user.email, user.name, "Security Alert: Password Changed", success_message)).start()
+
         return jsonify({"message": "Password updated successfully! You can login now."}), 200
     else:
         return jsonify({"message": "User not found!"}), 404
