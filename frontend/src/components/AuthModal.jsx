@@ -9,7 +9,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' }); 
 
-  // 🌟 Naye States: Password dikhane/chhupane ke liye
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -29,7 +28,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     setTimeout(() => setMessage({ text: '', type: '' }), 5000);
   };
 
-  // Jab Modal band ho, toh state reset kar do (Taki aglibaar password hide hi rahe)
   const handleClose = () => {
     setShowPassword(false);
     setShowConfirmPassword(false);
@@ -52,6 +50,14 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
       const data = await res.json();
       if (res.ok) {
         showMessage("✅ Login Successful!", "success");
+        
+        // 🌟 NAYA CODE: LOCAL STORAGE MEIN DATA SAVE KARNA 🌟
+        localStorage.setItem('loggedInUser', JSON.stringify({
+          name: data.name,
+          email: data.email,
+          phone: data.phone
+        }));
+
         onLoginSuccess({ name: data.name, email: data.email }); 
         setTimeout(handleClose, 1500); 
       } else {
@@ -121,7 +127,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
       const res = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // 🌟 OTP KO SATH MEIN BHEJEIN
         body: JSON.stringify({ email: formData.email, otp: formData.otp, new_password: formData.new_password })
       });
       const data = await res.json();
@@ -137,9 +142,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     setLoading(false);
   };
 
-  // ==========================================
-  // UI RENDER
-  // ==========================================
   if (!isOpen) return null;
 
   return (
@@ -147,7 +149,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
       <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} 
         className="bg-white rounded-2xl p-8 w-full max-w-md relative shadow-2xl">
         
-        {/* Close Button */}
         <button onClick={handleClose} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl">
           <FaTimes />
         </button>
@@ -172,7 +173,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
               <FaEnvelope className="absolute top-3 left-3 text-gray-400" />
               <input type="email" name="email" required placeholder="Email Address" onChange={handleChange} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
             </div>
-            {/* 🌟 Login Password + Eye Icon */}
             <div className="relative">
               <FaLock className="absolute top-3 left-3 text-gray-400" />
               <input 
@@ -215,7 +215,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
               <FaPhone className="absolute top-3 left-3 text-gray-400" />
               <input type="tel" name="phone" required placeholder="WhatsApp Number" onChange={handleChange} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
             </div>
-            {/* 🌟 Signup Password + Eye Icon */}
             <div className="relative">
               <FaLock className="absolute top-3 left-3 text-gray-400" />
               <input 
@@ -243,10 +242,10 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
         {/* 3. FORGOT PASSWORD FORM */}
         {view === 'forgot' && (
           <form onSubmit={handleForgot} className="space-y-4">
-            <p className="text-sm text-gray-600 mb-4 text-center">Enter your registered Email or Phone Number to reset your password.</p>
+            <p className="text-sm text-gray-600 mb-4 text-center">Enter your registered Email.</p>
             <div className="relative">
               <FaUser className="absolute top-3 left-3 text-gray-400" />
-              <input type="text" name="identifier" required placeholder="Email or Phone Number" onChange={handleChange} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              <input type="text" name="identifier" required placeholder="Email Address" onChange={handleChange} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
             </div>
             <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors">
               {loading ? 'Searching...' : 'Find Account'}
@@ -261,15 +260,12 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
         {view === 'reset' && (
           <form onSubmit={handleReset} className="space-y-4">
             <p className="text-sm text-green-600 font-bold mb-4 text-center">OTP has been sent to your email. Enter it below.</p>
-            
-            {/* 🌟 OTP Input Box */}
             <div className="relative">
               <input 
                 type="text" name="otp" required placeholder="Enter 6-Digit OTP" onChange={handleChange} maxLength="6"
                 className="w-full text-center tracking-widest font-bold text-lg px-4 py-2 border border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-blue-50" 
               />
             </div>
-
             <div className="relative">
               <FaLock className="absolute top-3 left-3 text-gray-400" />
               <input 
@@ -281,7 +277,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
-
             <div className="relative">
               <FaLock className="absolute top-3 left-3 text-gray-400" />
               <input 
@@ -293,7 +288,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                 {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
-
             <button type="submit" disabled={loading} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors">
               {loading ? 'Updating...' : 'Set New Password'}
             </button>
