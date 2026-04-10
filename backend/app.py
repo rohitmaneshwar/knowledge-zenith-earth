@@ -26,11 +26,11 @@ CORS(app)
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-123')
 
-# 🌟 SMART DATABASE CONNECTION 🌟
-# Agar Render ka DATABASE_URL milega toh Cloud DB use karega, 
-# nahi toh laptop test ke liye purana SQLite banayega.
+# 🌟 ULTRA-SMART DATABASE CONNECTION 🌟
+# Yeh Render mein 'databases_url' aur 'DATABASE_URL' dono dhoondhega
 
-db_url = os.environ.get('DATABASES_URL')
+db_url = os.environ.get('DATABASES_URL') or os.environ.get('DATABASE_URL')
+
 if db_url:
     # SQLAlchemy requires 'postgresql://' instead of 'postgres://'
     if db_url.startswith("postgres://"):
