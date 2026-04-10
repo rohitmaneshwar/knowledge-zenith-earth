@@ -15,6 +15,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # SECTION 1: APP SETUP & DATABASE CONFIG
 # ==========================================
 
+# ==========================================
+# SECTION 1: APP SETUP & DATABASE CONFIG
+# ==========================================
+
 load_dotenv()
 app = Flask(__name__)
 
@@ -22,18 +26,25 @@ CORS(app)
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-123')
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-instance_path = os.path.join(basedir, 'instance')
+# 🌟 SMART DATABASE CONNECTION 🌟
+# Agar Render ka DATABASE_URL milega toh Cloud DB use karega, 
+# nahi toh laptop test ke liye purana SQLite banayega.
 
-if not os.path.exists(instance_path):
-    os.makedirs(instance_path)
+db_url = os.environ.get('DATABASES_URL')
+if db_url:
+    # SQLAlchemy requires 'postgresql://' instead of 'postgres://'
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+else:
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    instance_path = os.path.join(basedir, 'instance')
+    if not os.path.exists(instance_path):
+        os.makedirs(instance_path)
+    db_path = os.path.join(instance_path, 'database.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
 
-db_path = os.path.join(instance_path, 'database.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    "connect_args": {"check_same_thread": False}
-}
 
 db = SQLAlchemy(app)
 
