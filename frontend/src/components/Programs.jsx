@@ -259,7 +259,7 @@ const Programs = () => {
                         </p>
                         {/* 🔴 YAHAN APNA ASLI QR CODE IMAGE LINK DAALEIN 🔴 */}
                         <img
-                          src="frontend/public/QR.jpeg"
+                          src="C:\Projects\Knowledge_Zenith_Earth\frontend\public\QR.jpeg"
                           alt="Payment QR"
                           className="w-40 h-40 mx-auto border-4 border-gray-100 shadow-sm rounded-lg"
                         />
