@@ -26,16 +26,13 @@ CORS(app)
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-123')
 
-# 🌟 ULTRA-SMART DATABASE CONNECTION 🌟
-# Yeh Render mein 'databases_url' aur 'DATABASE_URL' dono dhoondhega
-
-db_url = os.environ.get('DATABASES_URL') or os.environ.get('DATABASE_URL')
+db_url = os.environ.get('databases_url') or os.environ.get('DATABASE_URL')
 
 if db_url:
-    # SQLAlchemy requires 'postgresql://' instead of 'postgres://'
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+    print("🚀 BINGO! CLOUD DATABASE CONNECTED SUCCESSFULLY!") # <-- Ye line check karegi
 else:
     basedir = os.path.abspath(os.path.dirname(__file__))
     instance_path = os.path.join(basedir, 'instance')
@@ -43,6 +40,7 @@ else:
         os.makedirs(instance_path)
     db_path = os.path.join(instance_path, 'database.db')
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
+    print("⚠️ WARNING: CLOUD LINK NOT FOUND! USING TEMPORARY SQLITE.") # <-- Ye error batayegi
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
