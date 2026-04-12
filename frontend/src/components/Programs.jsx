@@ -259,13 +259,13 @@ const Programs = () => {
                         </p>
                         {/* 🔴 YAHAN APNA ASLI QR CODE IMAGE LINK DAALEIN 🔴 */}
                         <img
-                          src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg"
+                          src="frontend/public/QR.jpeg"
                           alt="Payment QR"
                           className="w-40 h-40 mx-auto border-4 border-gray-100 shadow-sm rounded-lg"
                         />
                         {/* 🔴 YAHAN APNI ASLI UPI ID DAALEIN 🔴 */}
                         <p className="mt-3 text-sm text-gray-600 font-mono bg-gray-100 py-1 inline-block px-4 rounded-full border border-gray-200">
-                          UPI: your-upi-id@ybl
+                          UPI:8120803877@ptsbi
                         </p>
                       </div>
 
