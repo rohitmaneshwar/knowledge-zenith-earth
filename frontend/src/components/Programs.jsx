@@ -33,7 +33,7 @@ const programsData = [
       "Proper alignment of your thoughts in a positive direction"
     ],
     btnText: "Start Today",
-    imageUrl: "C:/Projects/Knowledge_Zenith_Earth/frontend/public/the_magic.jpg"
+    imageUrl: "/the_magic.jpg"
   },
   {
     title: "21 Day Jackpot Course",
@@ -269,7 +269,7 @@ const Programs = () => {
                           </p>
                           {/* 🌟 FIX: Vercel ke liye sahi image path ('/QR.jpeg') */}
                           <img
-                            src="C:\Projects\Knowledge_Zenith_Earth\frontend\public\QR.jpeg"
+                            src="/QR.jpeg"
                             alt="Payment QR"
                             className="w-32 h-32 md:w-36 md:h-36 mx-auto border-4 border-gray-100 shadow-sm rounded-lg"
                           />
