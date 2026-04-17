@@ -33,7 +33,7 @@ const programsData = [
       "Proper alignment of your thoughts in a positive direction"
     ],
     btnText: "Start Today",
-    imageUrl: "/the_magic.jpg"
+    imageUrl: "/images.jpg"
   },
   {
     title: "21 Day Jackpot Course",
