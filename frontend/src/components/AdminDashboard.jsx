@@ -27,7 +27,7 @@ const AdminDashboard = () => {
       });
       if (res.ok) {
         setIsAuthenticated(true);
-        fetchAllData(); // Login hote hi saara data le aao
+        fetchAllData(); 
       } else {
         setError('Incorrect Password');
       }
@@ -37,10 +37,9 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
-  // 2. FETCH ALL DATA (Students, Users, Reviews)
+  // 2. FETCH ALL DATA
   const fetchAllData = async () => {
     try {
-      // Ek saath teeno APIs call kar rahe hain
       const [resUsers, resStudents, resReviews] = await Promise.all([
         fetch(`${API_BASE_URL}/api/users`),
         fetch(`${API_BASE_URL}/api/students`),
@@ -70,6 +69,21 @@ const AdminDashboard = () => {
       const res = await fetch(`${API_BASE_URL}/api/students/${id}`, { method: 'DELETE' });
       if (res.ok) setStudents(students.filter(s => s.id !== id));
     } catch (err) { alert('Error deleting account.'); }
+  };
+
+  // 🌟 NAYA FUNCTION: Review Delete karne ke liye
+  const handleDeleteReview = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete the review by ${name}?`)) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/reviews/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setReviews(reviews.filter(r => r.id !== id));
+      } else {
+        alert('Failed to delete review.');
+      }
+    } catch (err) { 
+      alert('Error connecting to server.'); 
+    }
   };
 
   // 4. GROUP COURSE DATA
@@ -121,7 +135,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* ========================================== */}
-        {/* SECTION 1: REGISTERED ACCOUNTS (NEW SIGN UPS) */}
+        {/* SECTION 1: REGISTERED ACCOUNTS */}
         {/* ========================================== */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="bg-green-700 px-6 py-4 border-b flex justify-between items-center">
@@ -136,6 +150,7 @@ const AdminDashboard = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 text-gray-600 text-sm border-b">
+                  <th className="p-4 font-bold">Date & Time</th> {/* 🌟 Time Column */}
                   <th className="p-4 font-bold">Name</th>
                   <th className="p-4 font-bold">Email</th>
                   <th className="p-4 font-bold">Phone</th>
@@ -144,10 +159,12 @@ const AdminDashboard = () => {
               </thead>
               <tbody>
                 {students.length === 0 ? (
-                  <tr><td colSpan="4" className="p-4 text-center text-gray-500 py-8">No registered accounts found.</td></tr>
+                  <tr><td colSpan="5" className="p-4 text-center text-gray-500 py-8">No registered accounts found.</td></tr>
                 ) : (
                   students.map((student) => (
                     <tr key={student.id} className="border-b hover:bg-gray-50 transition">
+                      {/* 🌟 Database se aane wala Time yahan dikhega */}
+                      <td className="p-4 text-sm text-gray-500 whitespace-nowrap">{student.created_at || student.date || 'N/A'}</td>
                       <td className="p-4 font-bold text-gray-900">{student.name}</td>
                       <td className="p-4 text-sm text-gray-800">{student.email}</td>
                       <td className="p-4 text-sm text-gray-600">{student.phone}</td>
@@ -186,7 +203,7 @@ const AdminDashboard = () => {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-gray-50 text-gray-600 text-sm border-b">
-                        <th className="p-4 font-bold">Date</th>
+                        <th className="p-4 font-bold">Date & Time</th>
                         <th className="p-4 font-bold">Name</th>
                         <th className="p-4 font-bold">Contact</th>
                         <th className="p-4 font-bold">Trans ID</th>
@@ -196,7 +213,8 @@ const AdminDashboard = () => {
                     <tbody>
                       {groupedUsers[courseName].map((user) => (
                         <tr key={user.id} className="border-b hover:bg-gray-50 transition">
-                          <td className="p-4 text-sm text-gray-500 whitespace-nowrap">{user.date}</td>
+                          {/* 🌟 Time Update */}
+                          <td className="p-4 text-sm text-gray-500 whitespace-nowrap">{user.created_at || user.date || 'N/A'}</td>
                           <td className="p-4 font-bold text-gray-900">{user.name}</td>
                           <td className="p-4">
                             <div className="text-sm text-gray-800">{user.email}</div>
@@ -233,18 +251,31 @@ const AdminDashboard = () => {
               <p className="text-gray-500 col-span-2 text-center py-4">No reviews submitted yet.</p>
             ) : (
               reviews.map((review) => (
-                <div key={review.id} className="border border-gray-100 bg-gray-50 rounded-lg p-4 shadow-sm">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h4 className="font-bold text-gray-900">{review.name}</h4>
-                      <p className="text-xs text-blue-600 font-bold">{review.program}</p>
+                <div key={review.id} className="border border-gray-100 bg-gray-50 rounded-lg p-4 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-bold text-gray-900">{review.name}</h4>
+                        <p className="text-xs text-blue-600 font-bold">{review.program}</p>
+                      </div>
+                      <span className="text-yellow-500 flex text-sm">
+                        {[...Array(review.rating)].map((_, i) => <FaStar key={i} />)}
+                      </span>
                     </div>
-                    <span className="text-yellow-500 flex text-sm">
-                      {[...Array(review.rating)].map((_, i) => <FaStar key={i} />)}
-                    </span>
+                    <p className="text-sm text-gray-600 mt-2 italic">"{review.message}"</p>
                   </div>
-                  <p className="text-sm text-gray-600 mt-2 italic">"{review.message}"</p>
-                  <p className="text-xs text-gray-400 mt-3">{review.date}</p>
+                  
+                  {/* 🌟 NAYA FOOTER: Time aur Delete Button ke liye */}
+                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200">
+                    <p className="text-xs text-gray-400">{review.created_at || review.date}</p>
+                    <button 
+                      onClick={() => handleDeleteReview(review.id, review.name)} 
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded transition-colors flex items-center gap-1 text-sm font-bold"
+                    >
+                      <FaTrash /> Delete
+                    </button>
+                  </div>
+
                 </div>
               ))
             )}
