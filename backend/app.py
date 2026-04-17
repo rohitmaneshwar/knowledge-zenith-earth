@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 import random
 import smtplib
 import threading
@@ -348,6 +349,19 @@ def get_reviews():
     except Exception as e:
         print(f"Error in fetching reviews: {e}")
         return jsonify([])
+    
+@app.route('/api/reviews/<int:review_id>', methods=['DELETE'])
+def delete_review(review_id):
+    try:
+        review = Review.query.get(review_id)
+        if not review:
+            return jsonify({"error": "Review not found"}), 404
+        
+        db.session.delete(review)
+        db.session.commit()
+        return jsonify({"message": "Review deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ==========================================
 # SECTION 7: APP RUNNER

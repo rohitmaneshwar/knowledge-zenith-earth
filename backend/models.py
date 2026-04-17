@@ -13,6 +13,7 @@ class User(db.Model):
     program_name = db.Column(db.String(200)) # Kaunsa program select kiya
     transaction_id = db.Column(db.String(100), nullable=True) # Naya Field
     date_applied = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
 # 1. Review Model banayein
 class Review(db.Model):
@@ -22,3 +23,4 @@ class Review(db.Model):
     rating = db.Column(db.Integer, nullable=False)
     message = db.Column(db.Text, nullable=False)
     date = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
