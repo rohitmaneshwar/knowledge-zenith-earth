@@ -42,8 +42,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-123')
 #     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
 #     print("⚠️ WARNING: CLOUD LINK NOT FOUND! USING TEMPORARY SQLITE.") # <-- Ye error batayegi
 
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://zenith_db_user:password@dpg-cabcde123-a.singapore-postgres.render.com/zenith_db"
-
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://zenith_db_yj7h_user:mLyY8JcCQoYodFesFi2ll8nDDoaR2FEa@dpg-d7cdmchf9bms73eqh9c0-a.singapore-postgres.render.com/zenith_db_yj7h"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
