@@ -53,7 +53,7 @@ const Testimonials = () => {
 
   const scroll = (direction) => {
     if (scrollRef.current) {
-      const scrollAmount = 350; 
+      const scrollAmount = 350;
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
@@ -74,7 +74,7 @@ const Testimonials = () => {
       });
 
       if (response.ok) {
-        await fetchReviews(); 
+        await fetchReviews();
         setShowForm(false);
         setNewReview({ name: '', program: '3 Hours Manifestation Webinar', rating: 5, message: '' });
         alert("✨ Magic Posted! Aapka feedback save ho gaya hai.");
@@ -96,11 +96,20 @@ const Testimonials = () => {
   return (
     <section className="py-20 px-6 bg-white overflow-hidden" id="feedback">
       <div className="max-w-7xl mx-auto relative">
-        
+
         <div className="text-center mb-16">
-          <h2 className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-2">Testimonials</h2>
-          <h3 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-6">Real Stories, Real Magic ✨</h3>
-          <button 
+          <div className="text-center mb-12 md:mb-16">
+            {/* Bada aur Bold -> Testimonials */}
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 uppercase tracking-tight mb-3">
+              Testimonials
+            </h2>
+
+            {/* Chhota aur Stylish -> Real Stories, Real Magic */}
+            <h3 className="text-lg md:text-xl font-semibold text-blue-600">
+              Real Stories, Real Magic
+            </h3>
+          </div>
+          <button
             onClick={() => setShowForm(true)}
             className="bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:-translate-y-1"
           >
@@ -121,7 +130,7 @@ const Testimonials = () => {
             </button>
           )}
 
-          <div 
+          <div
             ref={scrollRef}
             onScroll={handleScroll}
             className="flex gap-6 overflow-x-auto pb-10 pt-4 snap-x snap-mandatory scroll-smooth [&::-webkit-scrollbar]:hidden"
@@ -133,22 +142,22 @@ const Testimonials = () => {
             ) : (
               <AnimatePresence>
                 {reviews.map((rev) => (
-                  <motion.div 
+                  <motion.div
                     key={rev.id}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="bg-blue-50 p-6 md:p-8 rounded-2xl shadow-sm border border-blue-100 relative w-[280px] md:w-[340px] snap-center shrink-0 flex flex-col whitespace-normal break-words"
                   >
                     <FaQuoteLeft className="text-blue-200 text-3xl absolute top-6 right-6 opacity-40" />
-                    
+
                     <div className="flex text-yellow-400 mb-3 text-sm">
                       {[...Array(parseInt(rev.rating))].map((_, i) => <FaStar key={i} />)}
                     </div>
-                    
+
                     <p className="text-gray-700 italic mb-6 leading-relaxed flex-grow text-sm md:text-base">
                       "{rev.message}"
                     </p>
-                    
+
                     <div className="mt-auto border-t border-blue-200 pt-4">
                       <h4 className="font-bold text-gray-900 text-sm md:text-base">{rev.name}</h4>
                       <p className="text-xs text-blue-600 font-medium uppercase tracking-tighter">{rev.program}</p>
@@ -164,33 +173,33 @@ const Testimonials = () => {
         {showForm && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
             <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-8 w-full max-w-md relative">
-              
+
               <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl">
                 <FaTimes />
               </button>
-              
+
               <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Write a Review</h3>
-              
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <input type="text" name="name" required value={newReview.name} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="Your Name" />
-                
+
                 <select name="program" value={newReview.program} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="3 Hours Manifestation Webinar">3 Hours Manifestation Webinar</option>
                   <option value="30 Days The Magic Book Practice">30 Days The Magic Book Practice</option>
                   <option value="21 Day Jackpot Course">21 Day Jackpot Course</option>
                   <option value="6 Month Mentorship Program">6 Month Mentorship Program</option>
                 </select>
-                
+
                 <select name="rating" value={newReview.rating} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
                   <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
                   <option value="3">⭐⭐⭐ (3 Stars)</option>
                 </select>
-                
+
                 <textarea name="message" required value={newReview.message} onChange={handleChange} rows="4" className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="How was your experience?"></textarea>
-                
-                <button 
-                  type="submit" 
+
+                <button
+                  type="submit"
                   disabled={isSubmitting}
                   className={`w-full font-bold py-3 rounded-lg shadow-md transition-colors text-white ${isSubmitting ? 'bg-gray-400' : 'bg-green-500 hover:bg-green-600'}`}
                 >
